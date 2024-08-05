@@ -16,6 +16,10 @@
       {
         "command": "gogen.comment",
         "title": "GoGen: Comment"
+      },
+      {
+        "command": "gogen.comments",
+        "title": "GoGen: Comments"
       }
     ]
   },

@@ -1,6 +1,5 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { error } from 'console';
 import * as vscode from 'vscode';
 
 // This method is called when your extension is activated
@@ -14,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('gogen.comment', () => {
+	const commentCommand = vscode.commands.registerCommand('gogen.comment', () => {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
 
@@ -35,9 +34,34 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 
-	context.subscriptions.push(disposable);
+	const nameCharacter = RegExp('\w', 'g');
 
+	const commentsCommand = vscode.commands.registerCommand('gogen.comments', () => {
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) {
+			vscode.window.showInformationMessage('No active text editor');
+			return;
+		}
 
+		editor.selections.forEach((selection) => {
+			const lineText = editor.document.lineAt(selection.start.line).text;
+			const cursor = selection.start;
+
+			// find start of name
+
+			let currentCharIndex = cursor.character;
+			let currentChar = lineText.charAt(currentCharIndex);
+
+			while (!nameCharacter.test(currentChar)) {
+
+				// TODO: пройтись назад и вперёд до несовпадения с регуляркой
+				//		так мы найдём начало и конец того, что является комментом
+
+			}
+		});
+	});
+
+	context.subscriptions.push(commentCommand, commentsCommand);
 }
 
 // This method is called when your extension is deactivated
