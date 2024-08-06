@@ -3,6 +3,10 @@
   "displayName": "gogen",
   "description": "Provides handy generate commands",
   "version": "0.0.1",
+  "publisher": "almiskov",
+  "repository": {
+    "url": "https://github.com/almiskov/gogen"
+  },
   "engines": {
     "vscode": "^1.91.0"
   },
@@ -13,10 +17,6 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "gogen.comment",
-        "title": "GoGen: Comment"
-      },
       {
         "command": "gogen.comments",
         "title": "GoGen: Comments"

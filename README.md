@@ -1,6 +1,6 @@
 # gogen README
 
-This is the README for your extension "gogen". After writing up a brief description, we recommend including the following sections.
+makes some generating easy
 
 ## Features
 
@@ -14,7 +14,7 @@ For example if there is an image subfolder under your extension project workspac
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+no requirements yet
 
 ## Extension Settings
 
