@@ -22,45 +22,51 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
         );
         if (!symbols) { return; };
 
-        const actions: (vscode.CodeAction[] | undefined) = [];
+        const actions: vscode.CodeAction[] = [];
 
         for (const symbol of symbols) {
-            if (this.shouldBeCommented(document, symbol, range.start)) {
-                actions.push(this.createGenerateCommentActions(symbol));
-            }
+            this.maybeAddGenCommentAction(actions, symbol, document, range);
         }
 
         return actions;
     }
 
-
-    shouldBeCommented(document: vscode.TextDocument, symbol: vscode.DocumentSymbol, cursor: vscode.Position): boolean {
-        const cursorAtSymbol = symbol.range.contains(cursor);
-        if (!cursorAtSymbol) {
-            return false;
+    maybeAddGenCommentAction(actions: vscode.CodeAction[], symbol: vscode.DocumentSymbol, document: vscode.TextDocument, range: vscode.Range | vscode.Selection): void {
+        if (!symbol.range.contains(range.start)) {
+            return; 
         }
 
-        const alreadyCommented = document.lineAt(symbol.range.start.line - 1).text.includes(symbol.name);
-        if (alreadyCommented) {
-            return false;
-        }
+        let exactSymbol = symbol;
 
-        return true;
-    }
+        const findExactSymbol = (parent: vscode.DocumentSymbol) => {
+            if (parent.children.length === 0) {
+                return;
+            }
 
-    createGenerateCommentActions(symbol: vscode.DocumentSymbol): vscode.CodeAction {
+            for (const child of parent.children) {
+                if (!child.range.contains(range.start)) {
+                    continue;
+                }
+                exactSymbol = child;
+                findExactSymbol(child);
+            }
+        };
+
+        findExactSymbol(symbol);
+
+        // TODO: проверить, что перед полем или после (!) нет
+        //  и если нет, только тогда добавлять
+
         const action = new vscode.CodeAction(
-            `Generate comment for ${symbol.name}`,
+            `Generate comment for ${exactSymbol.name}`,
             vscode.CodeActionKind.QuickFix,
         );
 
         action.command = {
             ...this.generateCommentsCommand,
-            arguments: [symbol]
+            arguments: [exactSymbol]
         };
 
-        this.generateCommentsCommand.
-
-        return action;
+        actions.push(action);
     }
 }
