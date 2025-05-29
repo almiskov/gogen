@@ -62,6 +62,8 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
             symbolName = symbolName.substring(symbolName.indexOf('.') + 1);
         }
 
+        if (!this.isPublic(symbolName)) { return; }
+
         const re = new RegExp(`\\/[/*]\\s*${symbolName}\\b`);
 
         const prevLine = document.lineAt(exactSymbol.range.start.line - 1).text;
@@ -89,5 +91,10 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
         };
 
         actions.push(action);
+    }
+
+    isPublic(name: string): boolean {
+        const char = name.charAt(0);
+        return char === char.toUpperCase();
     }
 }
