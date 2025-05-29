@@ -3,6 +3,11 @@
   "displayName": "gogen",
   "description": "",
   "version": "0.0.1",
+  "publisher": "almiskov",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/almiskov/gogen"
+  },
   "engines": {
     "vscode": "^1.100.0"
   },
