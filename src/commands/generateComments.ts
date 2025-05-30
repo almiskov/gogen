@@ -19,7 +19,7 @@ export class GenerateCommentsCommand implements vscode.Command {
 
     genComment(symbol: vscode.DocumentSymbol) {
         if (!symbol) {
-            vscode.window.showInformationMessage('Command should be invoked via code action... TO BE...');
+            vscode.window.showInformationMessage('Command should be invoked via code action...');
             return;
         }
 

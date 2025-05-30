@@ -34,7 +34,7 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
         return actions;
     }
 
-    maybeAddGenConstructorAction(actions: vscode.CodeAction[], symbol: vscode.DocumentSymbol, symbols: vscode.DocumentSymbol[], range: vscode.Range | vscode.Selection): void {
+    maybeAddGenConstructorAction(actions: vscode.CodeAction[], symbol: vscode.DocumentSymbol, allSymbols: vscode.DocumentSymbol[], range: vscode.Range | vscode.Selection): void {
         if (!symbol.range.contains(range.start)) {
             return;
         }
@@ -43,19 +43,11 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
             return;
         }
 
-        const constructorName = `New${symbol.name.charAt(0).toUpperCase() + symbol.name.substring(1)}`;
-        
-        if (symbols.find(s => s.name === constructorName)) {
+        const ctorName = `New${symbol.name.charAt(0).toUpperCase() + symbol.name.substring(1)}`;
+
+        if (allSymbols.find(s => s.name === ctorName)) {
             return;
         }
-
-        // NOTE: можно по команде создания комментов автоматом проставлять в открытом файле
-        //  комменты по всем публичным символам
-
-        // TODO: не нужно генерить комменты для тестовых функций
-        // TODO: при создании конструктора поле ID превращается в параметр iD - нужно проверить, что если все заглавные буквы, то сделать lowercase
-        //      и lowercase для таких случаев OFDProvider => ofdProvider
-        // TODO: для структуры добавлять теги
 
         const action = new vscode.CodeAction(
             `Generate constructor for ${symbol.name}`,
@@ -75,23 +67,31 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
             return;
         }
 
+        if (
+            symbol.kind === vscode.SymbolKind.Function &&
+            document.fileName.endsWith('_test.go') &&
+            symbol.name.startsWith('Test')
+        ) { return; }
+
         let exactSymbol = symbol;
 
-        const findExactSymbol = (parent: vscode.DocumentSymbol) => {
-            if (parent.children.length === 0) {
-                return;
-            }
-
-            for (const child of parent.children) {
-                if (!child.range.contains(range.start)) {
-                    continue;
+        if (symbol.children.length > 0) {
+            const findExactSymbol = (parent: vscode.DocumentSymbol) => {
+                if (parent.children.length === 0) {
+                    return;
                 }
-                exactSymbol = child;
-                findExactSymbol(child);
-            }
-        };
 
-        findExactSymbol(symbol);
+                for (const child of parent.children) {
+                    if (!child.range.contains(range.start)) {
+                        continue;
+                    }
+                    exactSymbol = child;
+                    findExactSymbol(child);
+                }
+            };
+
+            findExactSymbol(symbol);
+        }
 
         // check if symbol already commented
 
@@ -101,7 +101,12 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
             symbolName = symbolName.substring(symbolName.indexOf('.') + 1);
         }
 
-        if (!this.isPublic(symbolName)) { return; }
+        switch (exactSymbol.kind) {
+            case vscode.SymbolKind.Field:
+                break;
+            default:
+                if (!this.isPublic(symbolName)) { return; }
+        }
 
         const re = new RegExp(`\\/[/*]\\s*${symbolName}\\b`);
 
