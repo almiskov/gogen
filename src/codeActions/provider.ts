@@ -28,13 +28,13 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
 
         for (const symbol of symbols) {
             this.maybeAddGenCommentAction(actions, symbol, document, range);
-            this.maybeAddGenConstructorAction(actions, symbol, document, range);
+            this.maybeAddGenConstructorAction(actions, symbol, symbols, range);
         }
 
         return actions;
     }
 
-    maybeAddGenConstructorAction(actions: vscode.CodeAction[], symbol: vscode.DocumentSymbol, document: vscode.TextDocument, range: vscode.Range | vscode.Selection): void {
+    maybeAddGenConstructorAction(actions: vscode.CodeAction[], symbol: vscode.DocumentSymbol, symbols: vscode.DocumentSymbol[], range: vscode.Range | vscode.Selection): void {
         if (!symbol.range.contains(range.start)) {
             return;
         }
@@ -43,7 +43,19 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
             return;
         }
 
-        // TODO: check if constructor already exists
+        const constructorName = `New${symbol.name.charAt(0).toUpperCase() + symbol.name.substring(1)}`;
+        
+        if (symbols.find(s => s.name === constructorName)) {
+            return;
+        }
+
+        // NOTE: можно по команде создания комментов автоматом проставлять в открытом файле
+        //  комменты по всем публичным символам
+
+        // TODO: не нужно генерить комменты для тестовых функций
+        // TODO: при создании конструктора поле ID превращается в параметр iD - нужно проверить, что если все заглавные буквы, то сделать lowercase
+        //      и lowercase для таких случаев OFDProvider => ofdProvider
+        // TODO: для структуры добавлять теги
 
         const action = new vscode.CodeAction(
             `Generate constructor for ${symbol.name}`,
