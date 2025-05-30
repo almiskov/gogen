@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
 
 export class GenerateCommentsCommand implements vscode.Command {
-    public static readonly COMMAND_ID = 'gogen.generateComments';
+    public static readonly COMMAND_ID = 'gogen.generateComment';
 
-    title: string = 'GoGen: Comments';
+    title: string = 'GoGen: Comment';
     command: string = GenerateCommentsCommand.COMMAND_ID;
     tooltip?: string | undefined;
     arguments?: any[] | undefined;

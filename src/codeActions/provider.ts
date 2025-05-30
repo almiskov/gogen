@@ -2,9 +2,11 @@ import * as vscode from 'vscode';
 
 export class CodeActionsProvider implements vscode.CodeActionProvider {
     private generateCommentsCommand: vscode.Command;
+    private generateConstructorCommand: vscode.Command;
 
-    constructor(generateCommentsCommand: vscode.Command) {
+    constructor(generateCommentsCommand: vscode.Command, generateConstructorCommand: vscode.Command) {
         this.generateCommentsCommand = generateCommentsCommand;
+        this.generateConstructorCommand = generateConstructorCommand;
     }
 
     register(context: vscode.ExtensionContext): void {
@@ -26,9 +28,34 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
 
         for (const symbol of symbols) {
             this.maybeAddGenCommentAction(actions, symbol, document, range);
+            this.maybeAddGenConstructorAction(actions, symbol, document, range);
         }
 
         return actions;
+    }
+
+    maybeAddGenConstructorAction(actions: vscode.CodeAction[], symbol: vscode.DocumentSymbol, document: vscode.TextDocument, range: vscode.Range | vscode.Selection): void {
+        if (!symbol.range.contains(range.start)) {
+            return;
+        }
+
+        if (symbol.kind !== vscode.SymbolKind.Struct) {
+            return;
+        }
+
+        // TODO: check if constructor already exists
+
+        const action = new vscode.CodeAction(
+            `Generate constructor for ${symbol.name}`,
+            vscode.CodeActionKind.QuickFix,
+        );
+
+        action.command = {
+            ...this.generateConstructorCommand,
+            arguments: [symbol]
+        };
+
+        actions.push(action);
     }
 
     maybeAddGenCommentAction(actions: vscode.CodeAction[], symbol: vscode.DocumentSymbol, document: vscode.TextDocument, range: vscode.Range | vscode.Selection): void {
