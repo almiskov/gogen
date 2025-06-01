@@ -25,7 +25,6 @@ export class GenerateCommentsCommand implements vscode.Command {
 
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            vscode.window.showInformationMessage('No active text editor');
             return;
         }
 

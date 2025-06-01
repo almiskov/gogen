@@ -3,10 +3,12 @@ import * as vscode from 'vscode';
 export class CodeActionsProvider implements vscode.CodeActionProvider {
     private generateCommentsCommand: vscode.Command;
     private generateConstructorCommand: vscode.Command;
+    private generateMethodCommand: vscode.Command;
 
-    constructor(generateCommentsCommand: vscode.Command, generateConstructorCommand: vscode.Command) {
+    constructor(generateCommentsCommand: vscode.Command, generateConstructorCommand: vscode.Command, generateMethodCommand: vscode.Command) {
         this.generateCommentsCommand = generateCommentsCommand;
         this.generateConstructorCommand = generateConstructorCommand;
+        this.generateMethodCommand = generateMethodCommand;
     }
 
     register(context: vscode.ExtensionContext): void {
@@ -26,12 +28,54 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
 
         const actions: vscode.CodeAction[] = [];
 
+        this.maybeAddGenMethodAction(actions, range, symbols, document);
+
         for (const symbol of symbols) {
             this.maybeAddGenCommentAction(actions, symbol, document, range);
             this.maybeAddGenConstructorAction(actions, symbol, symbols, range);
         }
 
         return actions;
+    }
+
+    maybeAddGenMethodAction(actions: vscode.CodeAction[], range: vscode.Range | vscode.Selection, allSymbols: vscode.DocumentSymbol[], document: vscode.TextDocument): void {
+        if (!document.lineAt(range.start).isEmptyOrWhitespace) {
+            return;
+        }
+
+        const types = allSymbols.filter(s => s.kind === vscode.SymbolKind.Class || s.kind === vscode.SymbolKind.Struct);
+
+        if (types.length === 0) {
+            return;
+        }
+
+        let closest: vscode.DocumentSymbol | undefined = undefined;
+
+        for (const typ of types.reverse()) {
+            if (range.start.isAfter(typ.range.end)) {
+                closest = typ;
+            }
+
+            if (typ.range.start.isBefore(range.start)) {
+                break;
+            }
+        }
+
+        if (!closest) {
+            return;
+        }
+
+        const action = new vscode.CodeAction(
+            `Generate method for ${closest.name}`,
+            vscode.CodeActionKind.QuickFix,
+        );
+
+        action.command = {
+            ...this.generateMethodCommand,
+            arguments: [closest, range.start]
+        };
+
+        actions.push(action);
     }
 
     maybeAddGenConstructorAction(actions: vscode.CodeAction[], symbol: vscode.DocumentSymbol, allSymbols: vscode.DocumentSymbol[], range: vscode.Range | vscode.Selection): void {
