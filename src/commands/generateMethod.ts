@@ -1,3 +1,4 @@
+import { checkPrime } from "crypto";
 import * as vscode from "vscode";
 
 export class GenerateMethodCommand implements vscode.Command {
@@ -57,7 +58,7 @@ export class GenerateMethodCommand implements vscode.Command {
             '*' + symbol.name :
             symbol.name;
 
-        const recvVar = symbol.name.charAt(0).toLowerCase();
+        const recvVar = this.recvVar(symbol.name);
 
         const meth: string[] = [];
         let withComment = false;
@@ -83,5 +84,21 @@ export class GenerateMethodCommand implements vscode.Command {
         });
 
         editor.selection = new vscode.Selection(newCursorPosition, newCursorPosition);
+    }
+
+    recvVar(name: string): string {
+        for (let i = name.length - 1; i > 0; i--) {
+            const char = name.charAt(i);
+
+            if (!isNaN(parseInt(char))) {
+                continue;
+            }
+
+            if (char === char.toUpperCase()) {
+                return char.toLowerCase();
+            }
+        }
+
+        return name.charAt(0).toLowerCase();
     }
 }
