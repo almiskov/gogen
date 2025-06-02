@@ -55,12 +55,18 @@ export class GenerateConstructorCommand implements vscode.Command {
             );
         }
 
+        let insertAt: vscode.Position = symbol.range.end;
+
+        if (editor.document.lineAt(symbol.range.start).firstNonWhitespaceCharacterIndex !== 0) {
+            insertAt = this.exactInsertPosition(insertAt, editor.document);
+        }
+
         editor.edit(b => {
-            b.insert(symbol.range.end, '\n'),
-                b.insert(
-                    symbol.range.end.with({ line: symbol.range.end.line + 1 }),
-                    ctor.join('\n') + '\n',
-                );
+            b.insert(insertAt, '\n'),
+            b.insert(
+                insertAt.with({ line: insertAt.line + 1 }),
+                ctor.join('\n') + '\n',
+            );
         });
     }
 
@@ -79,5 +85,16 @@ export class GenerateConstructorCommand implements vscode.Command {
         return lowCapitalsIDx === name.length ?
             name.toLowerCase() :
             name.substring(0, lowCapitalsIDx).toLowerCase() + name.substring(lowCapitalsIDx);
+    }
+
+    exactInsertPosition(base: vscode.Position, document: vscode.TextDocument): vscode.Position {
+        for (let i = base.line + 1; i < document.lineCount; i++) {
+            const line = document.lineAt(i);
+            if (line.text.startsWith(')')) {
+                return line.range.end;
+            }
+        }
+
+        return base;
     }
 }
