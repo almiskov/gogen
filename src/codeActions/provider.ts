@@ -43,15 +43,15 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
             return;
         }
 
-        const types = allSymbols.filter(s => s.kind === vscode.SymbolKind.Class || s.kind === vscode.SymbolKind.Struct);
+        const typesUpsideDown = allSymbols.filter(s => s.kind === vscode.SymbolKind.Class || s.kind === vscode.SymbolKind.Struct).reverse();
 
-        if (types.length === 0) {
+        if (typesUpsideDown.length === 0) {
             return;
         }
 
         let closest: vscode.DocumentSymbol | undefined = undefined;
 
-        for (const typ of types.reverse()) {
+        for (const typ of typesUpsideDown) {
             if (range.start.isAfter(typ.range.end)) {
                 closest = typ;
             }
@@ -65,17 +65,81 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
             return;
         }
 
-        const action = new vscode.CodeAction(
-            `Generate method for ${closest.name}`,
-            vscode.CodeActionKind.QuickFix,
-        );
+        if (document.lineAt(closest.range.start).firstNonWhitespaceCharacterIndex === 0) {
+            // definition is like 
+            //
+            // type Name stuct {}
+            //                       <--- code action for *Name
+            // 
+            const action = new vscode.CodeAction(
+                `Generate method for ${closest.name}`,
+                vscode.CodeActionKind.QuickFix,
+            );
 
-        action.command = {
-            ...this.generateMethodCommand,
-            arguments: [closest, range.start]
-        };
+            action.command = {
+                ...this.generateMethodCommand,
+                arguments: [closest, range.start]
+            };
 
-        actions.push(action);
+            actions.push(action);
+
+            return;
+        }
+
+        // definition is like 
+        //  
+        // type (
+        //      User struct{}
+        //                          <--- no code action      
+        //      Count int
+        //                          <--- no code action
+        // )
+        //                          <--- code actions for *User and Count
+        //
+
+        const blockStartRe = /type\s*\(/;
+        let blockStart = closest.range.start;
+
+        while (!blockStartRe.test(document.lineAt(blockStart).text)) {
+            blockStart = blockStart.with({ line: blockStart.line - 1 });
+
+            if (blockStart.line === 0) {
+                return;
+            }
+        }
+
+        const blockEndRe = /^\s*\).*$/;
+        let blockEnd = closest.range.end;
+
+        while (!blockEndRe.test(document.lineAt(blockEnd).text)) {
+            blockEnd = blockEnd.with({line: blockEnd.line + 1});
+
+            if (blockEnd.line === document.lineCount) {
+                return;
+            }
+        }
+
+        const blockRange = new vscode.Range(blockStart, blockEnd);
+
+        if (blockRange.contains(range)) {
+            return;
+        }
+
+        allSymbols
+            .filter(s => blockRange.contains(s.range))
+            .forEach(s => {
+                const action = new vscode.CodeAction(
+                    `Generate method for ${s.name}`,
+                    vscode.CodeActionKind.QuickFix,
+                );
+
+                action.command = {
+                    ...this.generateMethodCommand,
+                    arguments: [s, range.start]
+                };
+
+                actions.push(action);
+            });
     }
 
     maybeAddGenConstructorAction(actions: vscode.CodeAction[], symbol: vscode.DocumentSymbol, allSymbols: vscode.DocumentSymbol[], range: vscode.Range | vscode.Selection): void {
