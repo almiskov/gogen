@@ -2,17 +2,18 @@
   "name": "gogen",
   "displayName": "gogen",
   "description": "",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "almiskov",
   "repository": {
     "type": "git",
     "url": "https://github.com/almiskov/gogen"
   },
+  "icon": "images/gopher.png",
   "engines": {
     "vscode": "^1.100.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages"
   ],
   "activationEvents": [
     "onLanguage:go"
