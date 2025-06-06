@@ -43,6 +43,12 @@ export class CodeActionsProvider implements vscode.CodeActionProvider {
             return;
         }
 
+        for (const s of allSymbols) {
+            if (s.range.contains(range)) {
+                return;
+            }
+        }
+
         const typesUpsideDown = allSymbols.filter(s => s.kind === vscode.SymbolKind.Class || s.kind === vscode.SymbolKind.Struct).reverse();
 
         if (typesUpsideDown.length === 0) {
