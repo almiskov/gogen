@@ -2,7 +2,7 @@
   "name": "gogen",
   "displayName": "gogen",
   "description": "",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "publisher": "almiskov",
   "repository": {
     "type": "git",
@@ -37,7 +37,8 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "package": "vsce package --skip-license"
   },
   "devDependencies": {
     "@types/vscode": "^1.100.0",
